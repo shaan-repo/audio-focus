@@ -32,5 +32,5 @@ export default defineConfig({
       }
     })
   ],
-  base: '/Audio-Focus/'
+  base: '/audio-focus/'
 })
