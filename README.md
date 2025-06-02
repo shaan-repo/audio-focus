@@ -1,54 +1,52 @@
-# React + TypeScript + Vite
+# Focus Flow
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Focus Flow** is a minimalist, productivity-first Pomodoro timer that blends task tracking with ambient audio to promote deep work. Built with React, Vite, TypeScript, TailwindCSS, and PWA support, it’s designed for users who want both structure and flow without clutter.
 
-Currently, two official plugins are available:
+### 🔗 Live App
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+👉 [https://shaan-repo.github.io/audio-focus/](https://shaan-repo.github.io/audio-focus/)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🧠 Features
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+### 🎯 Pomodoro Timer
+- Standard 25-minute focus / 5-minute rest cycles
+- Simple interface for start, reset, and session tracking
+- Session counter shows how many Pomodoros you've completed
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### ✅ Task List
+- Add, view, and manage focus tasks for each session
+- Tasks persist across sessions (via local storage or state)
+- Encourages goal-oriented time blocks
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 🔊 Audio Control
+- Toggle binaural beats to help you lock in focus
+- 3-second test button to preview sound
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+### 📦 Planned Additions
+- **Sound Expansion**: toggle white noise, brown noise, pink noise, rain, and more
+- **Custom Timer Settings**: adjustable session and break durations
+- **Task Completion History**: track focus performance over time
+
+### 📱 PWA Support
+- Installable like a native app on desktop and mobile
+- Works offline after initial load
+
+---
+
+## 🚀 Tech Stack
+
+- [React](https://reactjs.org/) (UI)
+- [Vite](https://vitejs.dev/) (build tool)
+- [TypeScript](https://www.typescriptlang.org/) (type safety)
+- [TailwindCSS](https://tailwindcss.com/) (styling)
+- [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (progressive web app support)
+
+---
+
+## 🛠️ Running Locally
+
+```bash
+pnpm install
+pnpm run dev
