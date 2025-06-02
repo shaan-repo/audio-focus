@@ -2,10 +2,13 @@
   "name": "audio-focus",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://shaanbharwani.github.io/audio-focus",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "predeploy": "pnpm run build",
+    "deploy": "gh-pages -d dist",
     "lint": "eslint .",
     "preview": "vite preview"
   },
