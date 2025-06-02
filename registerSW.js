@@ -1,1 +1,1 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/Audio-Focus/sw.js', { scope: '/Audio-Focus/' })})}
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/audio-focus/sw.js', { scope: '/audio-focus/' })})}
