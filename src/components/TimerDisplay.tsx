@@ -1,5 +1,5 @@
 import React from 'react';
-import { Timer } from 'lucide-react';
+// import { Timer } from 'lucide-react';
 import { TimerDropdown } from './TimerDropdown';
 
 interface TimerDisplayProps {

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Music, ChevronDown, Check } from 'lucide-react';
+import { Music, ChevronDown } from 'lucide-react';
 
 export type AudioType = 'binaural' | 'white' | 'pink' | 'rain';
 
@@ -43,7 +43,7 @@ export const AudioTypeDropdown: React.FC<AudioTypeDropdownProps> = ({
   audioEnabled,
   currentType,
   onTypeChange,
-  onToggle,
+  //onToggle, COME BACK TO THIS AS WELL <- NEED onToggle FOR LATER
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<'top' | 'bottom'>('bottom');

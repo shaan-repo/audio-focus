@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 import { TimerDisplay } from './components/TimerDisplay';
 import TimerControls from './components/TimerControls';
@@ -55,7 +55,8 @@ const PomodoroTodoApp = () => {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [binauralBeats, setBinauralBeats] = useState<BinauralBeats | null>(null);
   const [currentAudioType, setCurrentAudioType] = useState<AudioType>('binaural');
-  const [noiseNode, setNoiseNode] = useState<Tone.Noise | null>(null);
+  // Come back to this line below with the underscores
+  const [_noiseNode, _setNoiseNode] = useState<Tone.Noise | null>(null);
   const [audioPlayers, setAudioPlayers] = useState<Record<AudioPlayerType, Tone.Player | undefined>>({
     white: undefined,
     pink: undefined,
