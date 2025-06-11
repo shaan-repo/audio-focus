@@ -18,6 +18,8 @@ interface BinauralBeats {
   right: Tone.Oscillator;
   pannerL: Tone.Panner;
   pannerR: Tone.Panner;
+  gainL: Tone.Gain;
+  gainR: Tone.Gain;
 }
 
 // Define timer preset type
@@ -39,6 +41,34 @@ type AudioPlayerType = Exclude<AudioType, 'binaural'>;
 function isAudioPlayerType(type: AudioType): type is AudioPlayerType {
   return type !== 'binaural';
 }
+
+// Helper function to handle smooth audio transitions
+const handleBinauralTransition = async (
+  binauralBeats: BinauralBeats,
+  shouldStart: boolean
+) => {
+  if (shouldStart) {
+    // If oscillators are stopped, start them first
+    if (binauralBeats.left.state !== 'started') {
+      binauralBeats.left.start();
+      binauralBeats.right.start();
+    }
+    // Ramp up gain
+    binauralBeats.gainL.gain.rampTo(1, 0.2);
+    binauralBeats.gainR.gain.rampTo(1, 0.2);
+  } else {
+    // Ramp down gain
+    binauralBeats.gainL.gain.rampTo(0, 0.2);
+    binauralBeats.gainR.gain.rampTo(0, 0.2);
+    // Stop oscillators after fade out
+    setTimeout(() => {
+      if (binauralBeats.left.state === 'started') {
+        binauralBeats.left.stop();
+        binauralBeats.right.stop();
+      }
+    }, 250); // Slightly longer than ramp time to ensure clean stop
+  }
+};
 
 const PomodoroTodoApp = () => {
   // Timer states
@@ -81,15 +111,21 @@ const PomodoroTodoApp = () => {
         const leftOsc = new Tone.Oscillator(40, "sine");
         const rightOsc = new Tone.Oscillator(46, "sine");
         
-        // Connect oscillators to panners
-        leftOsc.connect(pannerL);
-        rightOsc.connect(pannerR);
+        // Create gain nodes for volume control
+        const gainL = new Tone.Gain(0);
+        const gainR = new Tone.Gain(0);
         
-        // Set volume much higher for better audibility
+        // Connect oscillators through gain to panners
+        leftOsc.connect(gainL);
+        rightOsc.connect(gainR);
+        gainL.connect(pannerL);
+        gainR.connect(pannerR);
+        
+        // Set oscillator volume
         leftOsc.volume.value = -3;
         rightOsc.volume.value = -3;
         
-        setBinauralBeats({ left: leftOsc, right: rightOsc, pannerL, pannerR });
+        setBinauralBeats({ left: leftOsc, right: rightOsc, pannerL, pannerR, gainL, gainR });
       } catch (error) {
         console.log('Audio initialization failed:', error);
       }
@@ -133,18 +169,10 @@ const PomodoroTodoApp = () => {
     if (binauralBeats && isRunning) {
       if (audioEnabled && !isBreak) {
         // Start audio during focus sessions
-        if (binauralBeats.left.state === 'stopped') {
-          Tone.start().then(() => {
-            binauralBeats.left.start();
-            binauralBeats.right.start();
-          });
-        }
+        handleBinauralTransition(binauralBeats, true);
       } else {
         // Stop audio during breaks or when disabled
-        if (binauralBeats.left.state === 'started') {
-          binauralBeats.left.stop();
-          binauralBeats.right.stop();
-        }
+        handleBinauralTransition(binauralBeats, false);
       }
     }
   }, [isRunning, isBreak, audioEnabled, binauralBeats]);
@@ -161,15 +189,21 @@ const PomodoroTodoApp = () => {
         const leftOsc = new Tone.Oscillator(40, "sine");
         const rightOsc = new Tone.Oscillator(46, "sine");
         
-        // Connect oscillators to panners
-        leftOsc.connect(pannerL);
-        rightOsc.connect(pannerR);
+        // Create gain nodes for volume control
+        const gainL = new Tone.Gain(0);
+        const gainR = new Tone.Gain(0);
         
-        // Set volume much higher for better audibility
+        // Connect oscillators through gain to panners
+        leftOsc.connect(gainL);
+        rightOsc.connect(gainR);
+        gainL.connect(pannerL);
+        gainR.connect(pannerR);
+        
+        // Set oscillator volume
         leftOsc.volume.value = -3;
         rightOsc.volume.value = -3;
         
-        setBinauralBeats({ left: leftOsc, right: rightOsc, pannerL, pannerR });
+        setBinauralBeats({ left: leftOsc, right: rightOsc, pannerL, pannerR, gainL, gainR });
       } else {
         // Clean up any existing binaural beats
         if (binauralBeats) {
@@ -177,6 +211,8 @@ const PomodoroTodoApp = () => {
           binauralBeats.right?.dispose();
           binauralBeats.pannerL?.dispose();
           binauralBeats.pannerR?.dispose();
+          binauralBeats.gainL?.dispose();
+          binauralBeats.gainR?.dispose();
           setBinauralBeats(null);
         }
 
@@ -209,6 +245,8 @@ const PomodoroTodoApp = () => {
         binauralBeats.right?.dispose();
         binauralBeats.pannerL?.dispose();
         binauralBeats.pannerR?.dispose();
+        binauralBeats.gainL?.dispose();
+        binauralBeats.gainR?.dispose();
       }
       Object.values(audioPlayers).forEach(player => player?.dispose());
     };
@@ -279,17 +317,7 @@ const PomodoroTodoApp = () => {
       try {
         await Tone.start();
         if (currentAudioType === 'binaural' && binauralBeats) {
-          // Stop first if already running
-          if (binauralBeats.left.state === 'started') {
-            binauralBeats.left.stop();
-            binauralBeats.right.stop();
-          }
-          
-          // Small delay then start
-          setTimeout(() => {
-            binauralBeats.left.start();
-            binauralBeats.right.start();
-          }, 100);
+          handleBinauralTransition(binauralBeats, true);
         } else if (isAudioPlayerType(currentAudioType) && audioPlayers[currentAudioType]) {
           const player = audioPlayers[currentAudioType] as Tone.Player;
           if (player?.loaded) {
@@ -300,7 +328,7 @@ const PomodoroTodoApp = () => {
             player.start();
             // Add fade in for white and pink noise only
             if (currentAudioType === 'white' || currentAudioType === 'pink') {
-              player.volume.rampTo(-10, 0.5); // Shortened to 0.5 seconds
+              player.volume.rampTo(-10, 0.5); // Longer ramp for smoother transition
             }
           }
         }
@@ -314,16 +342,13 @@ const PomodoroTodoApp = () => {
     setIsRunning(false);
     if (audioEnabled) {
       if (currentAudioType === 'binaural' && binauralBeats) {
-        if (binauralBeats.left.state === 'started') {
-          binauralBeats.left.stop();
-          binauralBeats.right.stop();
-        }
+        handleBinauralTransition(binauralBeats, false);
       } else if (isAudioPlayerType(currentAudioType) && audioPlayers[currentAudioType]) {
         const player = audioPlayers[currentAudioType] as Tone.Player;
         // Add fade out for white and pink noise only
         if (currentAudioType === 'white' || currentAudioType === 'pink') {
-          player.volume.rampTo(-Infinity, 0.5); // Shortened to 0.5 seconds
-          setTimeout(() => player.stop(), 500);
+          player.volume.rampTo(-Infinity, 0.5); // Longer ramp for smoother transition
+          setTimeout(() => player.stop(), 550); // Slightly longer delay to ensure clean stop
         } else {
           player.stop();
         }
@@ -336,15 +361,12 @@ const PomodoroTodoApp = () => {
     setTimeLeft(isBreak ? currentPreset.break * 60 : currentPreset.focus * 60);
     if (audioEnabled) {
       if (currentAudioType === 'binaural' && binauralBeats) {
-        if (binauralBeats.left.state === 'started') {
-          binauralBeats.left.stop();
-          binauralBeats.right.stop();
-        }
+        handleBinauralTransition(binauralBeats, false);
       } else if (isAudioPlayerType(currentAudioType) && audioPlayers[currentAudioType]) {
         const player = audioPlayers[currentAudioType] as Tone.Player;
         if (currentAudioType === 'white' || currentAudioType === 'pink') {
-          player.volume.rampTo(-Infinity, 0.5);
-          setTimeout(() => player.stop(), 500);
+          player.volume.rampTo(-Infinity, 0.5); // Longer ramp for smoother transition
+          setTimeout(() => player.stop(), 550); // Slightly longer delay to ensure clean stop
         } else {
           player.stop();
         }
@@ -387,73 +409,33 @@ const PomodoroTodoApp = () => {
       console.log('Testing audio type:', currentAudioType);
       
       if (currentAudioType === 'binaural' && binauralBeats) {
-        // Stop first if already running
-        if (binauralBeats.left.state === 'started') {
-          binauralBeats.left.stop();
-          binauralBeats.right.stop();
-        }
-        
-        // Small delay then start
-        setTimeout(() => {
-          binauralBeats.left.start();
-          binauralBeats.right.start();
-        }, 100);
+        handleBinauralTransition(binauralBeats, true);
         
         setTimeout(() => {
-          if (binauralBeats.left.state === 'started') {
-            binauralBeats.left.stop();
-            binauralBeats.right.stop();
-          }
+          handleBinauralTransition(binauralBeats, false);
         }, 3000);
       } else if (isAudioPlayerType(currentAudioType) && audioPlayers[currentAudioType]) {
         const player = audioPlayers[currentAudioType] as Tone.Player;
-        console.log('Audio player state:', {
-          loaded: player?.loaded,
-          state: player?.state
-        });
-        
         if (player?.loaded) {
-          // Stop any existing playback first
-          if (player.state === 'started') {
-            if (currentAudioType === 'white' || currentAudioType === 'pink') {
-              player.volume.rampTo(-Infinity, 0.5);
-              setTimeout(() => player.stop(), 500);
-            } else {
-              player.stop();
-            }
-            // Wait a small amount of time before starting again
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          
           // Set initial volume to -Infinity for fade in
           if (currentAudioType === 'white' || currentAudioType === 'pink') {
             player.volume.value = -Infinity;
           }
           player.start();
-          console.log('Started audio playback');
-          
           // Add fade in for white and pink noise only
           if (currentAudioType === 'white' || currentAudioType === 'pink') {
-            player.volume.rampTo(-10, 0.5); // Shortened to 0.5 seconds
+            player.volume.rampTo(-10, 0.5); // Longer ramp for smoother transition
           }
           
-          // Stop after 3 seconds
           setTimeout(() => {
-            if (player.state === 'started') {
-              if (currentAudioType === 'white' || currentAudioType === 'pink') {
-                player.volume.rampTo(-Infinity, 0.5);
-                setTimeout(() => player.stop(), 500);
-              } else {
-                player.stop();
-              }
-              console.log('Stopped audio playback');
+            if (currentAudioType === 'white' || currentAudioType === 'pink') {
+              player.volume.rampTo(-Infinity, 0.5); // Longer ramp for smoother transition
+              setTimeout(() => player.stop(), 550); // Slightly longer delay to ensure clean stop
+            } else {
+              player.stop();
             }
           }, 3000);
-        } else {
-          console.log('Audio player not loaded yet');
         }
-      } else {
-        console.log('No audio player found for type:', currentAudioType);
       }
     } catch (error) {
       console.error('Audio test failed:', error);
