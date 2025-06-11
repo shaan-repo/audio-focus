@@ -28,7 +28,7 @@ const TodoList: React.FC<TodoListProps> = ({
 }) => {
   return (
     <div 
-      className="rounded-2xl p-4 sm:p-6 border border-white border-opacity-10"
+      className="relative z-10 rounded-2xl p-4 sm:p-6 border border-white border-opacity-10"
       style={{
         background: 'rgba(255, 255, 255, 0.03)',
         backdropFilter: 'blur(16px)',

@@ -80,7 +80,7 @@ export const AudioTypeDropdown: React.FC<AudioTypeDropdownProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-medium border ${
           audioEnabled
-            ? 'text-purple-300 border-purple-400 border-opacity-30'
+            ? 'text-purple-100 border-purple-400 border-opacity-30'
             : 'text-gray-400 border-gray-500 border-opacity-30'
         }`}
         style={{
@@ -100,7 +100,7 @@ export const AudioTypeDropdown: React.FC<AudioTypeDropdownProps> = ({
         <div 
           className={`absolute z-50 w-full ${
             dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
-          } bg-white/10 backdrop-blur-lg rounded-lg shadow-lg overflow-hidden`}
+          } z-[60] bg-white/15 backdrop-blur-lg rounded-lg shadow-lg overflow-hidden`}
         >
           <div className="max-h-[200px] overflow-y-auto">
             {AUDIO_TYPES.map((option) => (
@@ -110,8 +110,8 @@ export const AudioTypeDropdown: React.FC<AudioTypeDropdownProps> = ({
                 onClick={() => handleTypeSelect(option.value)}
                 className={`w-full px-4 py-2 text-left text-xs sm:text-sm font-medium transition-colors ${
                   option.value === currentType
-                    ? 'text-purple-300 bg-purple-500/10'
-                    : 'text-purple-200 hover:bg-purple-500/5'
+                    ? 'text-purple-100 bg-purple-500/20'
+                    : 'text-purple-50 hover:bg-purple-500/10'
                 }`}
               >
                 <div className="font-medium">{option.label}</div>

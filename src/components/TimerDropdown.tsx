@@ -70,7 +70,7 @@ export const TimerDropdown: React.FC<TimerDropdownProps> = ({
 
       {isOpen && (
         <div 
-          className="absolute top-full left-0 mt-2 w-full rounded-xl overflow-hidden z-50"
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 sm:w-60 max-w-[90vw] rounded-xl overflow-hidden z-50"
           style={{
             background: 'rgba(255, 255, 255, 0.03)',
             backdropFilter: 'blur(16px)',
@@ -86,8 +86,8 @@ export const TimerDropdown: React.FC<TimerDropdownProps> = ({
               onClick={() => handlePresetSelect(preset)}
               className={`w-full px-4 py-2 text-left text-xs sm:text-sm font-medium transition-colors ${
                 preset.label === currentPreset.label
-                  ? 'text-purple-300 bg-purple-500/10'
-                  : 'text-purple-200 hover:bg-purple-500/5'
+                  ? 'text-purple-100 bg-purple-500/20'
+                  : 'text-purple-50 hover:bg-purple-500/10'
               }`}
             >
               {preset.label}
