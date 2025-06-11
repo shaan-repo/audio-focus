@@ -406,7 +406,7 @@ const PomodoroTodoApp = () => {
   const completedTodos = todos.filter(todo => todo.completed).length;
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800 p-3 sm:p-4">
+    <div className="min-h-dvh overflow-auto lg:overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800 p-3 sm:p-4">
       <div className="max-w-6xl mx-auto h-full flex flex-col">
         {/* Header */}
         <div className="text-center mb-3">
