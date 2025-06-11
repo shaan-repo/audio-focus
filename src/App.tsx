@@ -185,11 +185,14 @@ const PomodoroTodoApp = () => {
 
         // Create new audio player based on type
         const player = new Tone.Player({
-          url: `/sounds/${currentAudioType}.mp3`,
+          url: `./sounds/${currentAudioType}.mp3`,
           loop: true,
-          volume: -20, // Adjust volume as needed
+          volume: -10,
           onload: () => {
-            console.log(`${currentAudioType} audio loaded`);
+            console.log(`${currentAudioType} audio loaded successfully`);
+          },
+          onerror: (error) => {
+            console.error(`Error loading ${currentAudioType} audio:`, error);
           }
         }).toDestination();
 
@@ -279,8 +282,6 @@ const PomodoroTodoApp = () => {
           // Stop first if already running
           if (binauralBeats.left.state === 'started') {
             binauralBeats.left.stop();
-          }
-          if (binauralBeats.right.state === 'started') {
             binauralBeats.right.stop();
           }
           
@@ -290,9 +291,17 @@ const PomodoroTodoApp = () => {
             binauralBeats.right.start();
           }, 100);
         } else if (isAudioPlayerType(currentAudioType) && audioPlayers[currentAudioType]) {
-          const player = audioPlayers[currentAudioType];
+          const player = audioPlayers[currentAudioType] as Tone.Player;
           if (player?.loaded) {
+            // Set initial volume to -Infinity for fade in
+            if (currentAudioType === 'white' || currentAudioType === 'pink') {
+              player.volume.value = -Infinity;
+            }
             player.start();
+            // Add fade in for white and pink noise only
+            if (currentAudioType === 'white' || currentAudioType === 'pink') {
+              player.volume.rampTo(-10, 0.5); // Shortened to 0.5 seconds
+            }
           }
         }
       } catch (error) {
@@ -307,12 +316,17 @@ const PomodoroTodoApp = () => {
       if (currentAudioType === 'binaural' && binauralBeats) {
         if (binauralBeats.left.state === 'started') {
           binauralBeats.left.stop();
-        }
-        if (binauralBeats.right.state === 'started') {
           binauralBeats.right.stop();
         }
       } else if (isAudioPlayerType(currentAudioType) && audioPlayers[currentAudioType]) {
-        audioPlayers[currentAudioType]?.stop();
+        const player = audioPlayers[currentAudioType] as Tone.Player;
+        // Add fade out for white and pink noise only
+        if (currentAudioType === 'white' || currentAudioType === 'pink') {
+          player.volume.rampTo(-Infinity, 0.5); // Shortened to 0.5 seconds
+          setTimeout(() => player.stop(), 500);
+        } else {
+          player.stop();
+        }
       }
     }
   };
@@ -324,12 +338,16 @@ const PomodoroTodoApp = () => {
       if (currentAudioType === 'binaural' && binauralBeats) {
         if (binauralBeats.left.state === 'started') {
           binauralBeats.left.stop();
-        }
-        if (binauralBeats.right.state === 'started') {
           binauralBeats.right.stop();
         }
       } else if (isAudioPlayerType(currentAudioType) && audioPlayers[currentAudioType]) {
-        audioPlayers[currentAudioType]?.stop();
+        const player = audioPlayers[currentAudioType] as Tone.Player;
+        if (currentAudioType === 'white' || currentAudioType === 'pink') {
+          player.volume.rampTo(-Infinity, 0.5);
+          setTimeout(() => player.stop(), 500);
+        } else {
+          player.stop();
+        }
       }
     }
   };
@@ -366,12 +384,12 @@ const PomodoroTodoApp = () => {
 
     try {
       await Tone.start();
+      console.log('Testing audio type:', currentAudioType);
+      
       if (currentAudioType === 'binaural' && binauralBeats) {
         // Stop first if already running
         if (binauralBeats.left.state === 'started') {
           binauralBeats.left.stop();
-        }
-        if (binauralBeats.right.state === 'started') {
           binauralBeats.right.stop();
         }
         
@@ -384,22 +402,61 @@ const PomodoroTodoApp = () => {
         setTimeout(() => {
           if (binauralBeats.left.state === 'started') {
             binauralBeats.left.stop();
-          }
-          if (binauralBeats.right.state === 'started') {
             binauralBeats.right.stop();
           }
         }, 3000);
       } else if (isAudioPlayerType(currentAudioType) && audioPlayers[currentAudioType]) {
-        const player = audioPlayers[currentAudioType];
+        const player = audioPlayers[currentAudioType] as Tone.Player;
+        console.log('Audio player state:', {
+          loaded: player?.loaded,
+          state: player?.state
+        });
+        
         if (player?.loaded) {
+          // Stop any existing playback first
+          if (player.state === 'started') {
+            if (currentAudioType === 'white' || currentAudioType === 'pink') {
+              player.volume.rampTo(-Infinity, 0.5);
+              setTimeout(() => player.stop(), 500);
+            } else {
+              player.stop();
+            }
+            // Wait a small amount of time before starting again
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+          
+          // Set initial volume to -Infinity for fade in
+          if (currentAudioType === 'white' || currentAudioType === 'pink') {
+            player.volume.value = -Infinity;
+          }
           player.start();
+          console.log('Started audio playback');
+          
+          // Add fade in for white and pink noise only
+          if (currentAudioType === 'white' || currentAudioType === 'pink') {
+            player.volume.rampTo(-10, 0.5); // Shortened to 0.5 seconds
+          }
+          
+          // Stop after 3 seconds
           setTimeout(() => {
-            player.stop();
+            if (player.state === 'started') {
+              if (currentAudioType === 'white' || currentAudioType === 'pink') {
+                player.volume.rampTo(-Infinity, 0.5);
+                setTimeout(() => player.stop(), 500);
+              } else {
+                player.stop();
+              }
+              console.log('Stopped audio playback');
+            }
           }, 3000);
+        } else {
+          console.log('Audio player not loaded yet');
         }
+      } else {
+        console.log('No audio player found for type:', currentAudioType);
       }
     } catch (error) {
-      console.log('Audio test failed:', error);
+      console.error('Audio test failed:', error);
     }
   };
 
