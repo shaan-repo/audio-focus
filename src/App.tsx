@@ -11,6 +11,7 @@ interface Todo {
   id: number;
   text: string;
   completed: boolean;
+  createdAt: number; // Add timestamp for future features
 }
 
 interface BinauralBeats {
@@ -29,11 +30,60 @@ interface TimerPreset {
   break: number;
 }
 
+// Define audio preferences type
+interface AudioPreferences {
+  enabled: boolean;
+  type: AudioType;
+}
+
+// Define storage data structure
+interface StorageData {
+  todos: Todo[];
+  sessions: number;
+  preset: TimerPreset;
+  audio: AudioPreferences;
+}
+
+// Local storage keys
+const STORAGE_KEYS = {
+  TODOS: 'focusFlow_todos',
+  SESSIONS: 'focusFlow_sessions',
+  PRESET: 'focusFlow_preset',
+  AUDIO: 'focusFlow_audio'
+} as const;
+
+// Local storage utilities
+const loadFromStorage = (key: string, defaultValue: any): any => {
+  try {
+    const item = localStorage.getItem(key);
+    if (item) {
+      return JSON.parse(item);
+    }
+  } catch (error) {
+    console.warn(`Failed to load ${key} from storage:`, error);
+  }
+  return defaultValue;
+};
+
+const saveToStorage = (key: string, value: any): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn(`Failed to save ${key} to storage:`, error);
+  }
+};
+
 // Initial preset
 const INITIAL_PRESET: TimerPreset = {
   label: 'Classic (25/5)',
   focus: 25,
   break: 5
+};
+
+// Initial audio preferences
+const INITIAL_AUDIO: AudioPreferences = {
+  enabled: true,
+  type: 'binaural'
 };
 
 type AudioPlayerType = Exclude<AudioType, 'binaural'>;
@@ -71,6 +121,9 @@ const handleBinauralTransition = async (
 };
 
 const PomodoroTodoApp = () => {
+  // Load data from localStorage on initialization
+  const [isInitialized, setIsInitialized] = useState(false);
+
   // Timer states
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
   const [isRunning, setIsRunning] = useState(false);
@@ -98,6 +151,68 @@ const PomodoroTodoApp = () => {
 
   // Timer preset states
   const [currentPreset, setCurrentPreset] = useState<TimerPreset>(INITIAL_PRESET);
+
+  // Initialize data from localStorage
+  useEffect(() => {
+    if (!isInitialized) {
+      // Load todos with migration for old data
+      const savedTodos = loadFromStorage(STORAGE_KEYS.TODOS, []);
+      const migratedTodos = savedTodos.map((todo: any) => ({
+        ...todo,
+        createdAt: todo.createdAt || Date.now() // Add createdAt if missing
+      }));
+      setTodos(migratedTodos);
+
+      // Load sessions
+      const savedSessions = loadFromStorage(STORAGE_KEYS.SESSIONS, 0);
+      setSessions(savedSessions);
+
+      // Load preset
+      const savedPreset = loadFromStorage(STORAGE_KEYS.PRESET, INITIAL_PRESET);
+      setCurrentPreset(savedPreset);
+
+      // Load audio preferences
+      const savedAudio = loadFromStorage(STORAGE_KEYS.AUDIO, INITIAL_AUDIO);
+      setAudioEnabled(savedAudio.enabled);
+      setCurrentAudioType(savedAudio.type);
+
+      // Set timer based on loaded preset
+      setTimeLeft(savedPreset.focus * 60);
+
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
+
+  // Save todos to localStorage whenever they change
+  useEffect(() => {
+    if (isInitialized) {
+      saveToStorage(STORAGE_KEYS.TODOS, todos);
+    }
+  }, [todos, isInitialized]);
+
+  // Save sessions to localStorage whenever they change
+  useEffect(() => {
+    if (isInitialized) {
+      saveToStorage(STORAGE_KEYS.SESSIONS, sessions);
+    }
+  }, [sessions, isInitialized]);
+
+  // Save preset to localStorage whenever it changes
+  useEffect(() => {
+    if (isInitialized) {
+      saveToStorage(STORAGE_KEYS.PRESET, currentPreset);
+    }
+  }, [currentPreset, isInitialized]);
+
+  // Save audio preferences to localStorage whenever they change
+  useEffect(() => {
+    if (isInitialized) {
+      saveToStorage(STORAGE_KEYS.AUDIO, {
+        enabled: audioEnabled,
+        type: currentAudioType
+      });
+    }
+  }, [audioEnabled, currentAudioType, isInitialized]);
 
   // Initialize binaural beats
   useEffect(() => {
@@ -379,7 +494,8 @@ const PomodoroTodoApp = () => {
       setTodos([...todos, {
         id: Date.now(),
         text: newTodo.trim(),
-        completed: false
+        completed: false,
+        createdAt: Date.now()
       }]);
       setNewTodo('');
     }
@@ -393,6 +509,38 @@ const PomodoroTodoApp = () => {
 
   const deleteTodo = (id: number) => {
     setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  // Clear all storage data (useful for resetting the app)
+  const clearAllData = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.TODOS);
+      localStorage.removeItem(STORAGE_KEYS.SESSIONS);
+      localStorage.removeItem(STORAGE_KEYS.PRESET);
+      localStorage.removeItem(STORAGE_KEYS.AUDIO);
+      
+      // Reset state to defaults
+      setTodos([]);
+      setSessions(0);
+      setCurrentPreset(INITIAL_PRESET);
+      setAudioEnabled(INITIAL_AUDIO.enabled);
+      setCurrentAudioType(INITIAL_AUDIO.type);
+      setTimeLeft(INITIAL_PRESET.focus * 60);
+      
+      console.log('All data cleared successfully');
+    } catch (error) {
+      console.error('Failed to clear data:', error);
+    }
+  };
+
+  // Debug function to log current storage state (useful for development)
+  const logStorageState = () => {
+    console.log('Current Storage State:', {
+      todos: loadFromStorage(STORAGE_KEYS.TODOS, []),
+      sessions: loadFromStorage(STORAGE_KEYS.SESSIONS, 0),
+      preset: loadFromStorage(STORAGE_KEYS.PRESET, INITIAL_PRESET),
+      audio: loadFromStorage(STORAGE_KEYS.AUDIO, INITIAL_AUDIO)
+    });
   };
 
   const formatTime = (seconds: number) => {
